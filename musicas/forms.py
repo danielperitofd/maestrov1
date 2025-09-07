@@ -1,5 +1,5 @@
 from django import forms
-from .models import Song
+from .models import Song, Company, Band
 
 class SongForm(forms.ModelForm):
     class Meta:
@@ -14,4 +14,23 @@ class SongForm(forms.ModelForm):
             "links": forms.Textarea(attrs={"class": "textarea"}),
             "themes": forms.TextInput(attrs={"class": "input"}),
             "notes": forms.Textarea(attrs={"class": "textarea"}),
+        }
+
+class CompanyForm(forms.ModelForm):
+    class Meta:
+        model = Company
+        fields = ["name", "city", "country"]
+        widgets = {
+            "name": forms.TextInput(attrs={"class": "input"}),
+            "city": forms.TextInput(attrs={"class": "input"}),
+            "country": forms.TextInput(attrs={"class": "input"}),
+        }
+
+class BandForm(forms.ModelForm):
+    class Meta:
+        model = Band
+        fields = ["name", "company"]
+        widgets = {
+            "name": forms.TextInput(attrs={"class": "input"}),
+            "company": forms.Select(attrs={"class": "input"}),
         }

@@ -6,7 +6,7 @@
     {% csrf_token %}
     <input type="file" name="csv_file" accept=".csv" required>
     <button type="submit" class="btn">Importar</button>
-    <a href="{% url 'musicas:song_list' %}" class="btn">Voltar</a>
+    <a href="{% url 'musicas:song_repertorio' %}" class="btn">Voltar</a>
 </form>
 
 <p><strong>Dica:</strong> O CSV deve ter cabeçalho com colunas: 

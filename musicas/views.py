@@ -7,16 +7,53 @@ from .forms import SongForm
 import csv
 from django.contrib import messages
 
-def song_list(request):
+from .forms import CompanyForm, BandForm
+from django.contrib.auth.decorators import login_required
+
+@login_required
+def create_company_and_band(request):
+    if request.method == "POST":
+        company_form = CompanyForm(request.POST)
+        band_form = BandForm(request.POST)
+
+        if company_form.is_valid() and band_form.is_valid():
+            company = company_form.save()
+            band = band_form.save(commit=False)
+            band.company = company
+            band.save()
+            band.members.add(request.user)
+            return redirect("musicas:welcome")  # ou outra página de boas-vindas
+    else:
+        company_form = CompanyForm()
+        band_form = BandForm()
+
+    return render(request, "musicas/create_company_and_band.html", {
+        "company_form": company_form,
+        "band_form": band_form
+    })
+
+@login_required
+def welcome(request):
+    user = request.user
+    social = user.socialaccount_set.first()
+    context = {
+        "name": user.first_name or user.username,
+        "email": user.email,
+        "photo": social.extra_data.get("picture") if social else None,
+        "social": social,
+    }
+    return render(request, "musicas/welcome.html", context)
+
+def song_repertorio(request):
     songs = Song.objects.all()
-    return render(request, "musicas/song_list.html", {"songs": songs})
+    return render(request, "musicas/song_repertorio.html", {"songs": songs})
 
 def song_create(request):
     if request.method == "POST":
         form = SongForm(request.POST)
         if form.is_valid():
             form.save()
-            return redirect("musicas:song_list")
+            return redirect("musicas:song_repertorio")
     else:
         form = SongForm()
     return render(request, "musicas/song_form.html", {"form": form})
@@ -27,7 +64,7 @@ def song_edit(request, pk):
         form = SongForm(request.POST, instance=song)
         if form.is_valid():
             form.save()
-            return redirect("musicas:song_list")
+            return redirect("musicas:song_repertorio")
     else:
         form = SongForm(instance=song)
     return render(request, "musicas/song_form.html", {"form": form})
@@ -35,7 +72,7 @@ def song_edit(request, pk):
 def song_delete(request, pk):
     song = get_object_or_404(Song, pk=pk)
     song.delete()
-    return redirect("musicas:song_list")
+    return redirect("musicas:song_repertorio")
 
 # ------------ Modulo Import Musicas CSV -----------------------
 
@@ -108,20 +145,20 @@ def song_import(request):
         csv_file = request.FILES.get("csv_file")
         if not csv_file:
             messages.error(request, "Selecione um arquivo CSV.")
-            return redirect("musicas:song_list")
+            return redirect("musicas:song_repertorio")
         if not csv_file.name.lower().endswith(".csv"):
             messages.error(request, "Envie um arquivo .csv")
-            return redirect("musicas:song_list")
+            return redirect("musicas:song_repertorio")
 
         text, used_enc = _try_read_csv_bytes(csv_file)
         if text is None:
             messages.error(request, "Não foi possível ler o CSV (encoding desconhecida). Tente salvar como 'CSV UTF-8' no Excel.")
-            return redirect("musicas:song_list")
+            return redirect("musicas:song_repertorio")
 
         lines = text.splitlines()
         if not lines:
             messages.error(request, "O arquivo CSV está vazio.")
-            return redirect("musicas:song_list")
+            return redirect("musicas:song_repertorio")
 
         created = 0
         skipped = 0  # <-- ESSA LINHA PRECISA ESTAR AQUI
@@ -160,7 +197,7 @@ def song_import(request):
             created += 1
 
         messages.success(request, f"Importadas {created} música(s). Ignoradas {skipped} linha(s) sem título. Encoding: {used_enc.upper()}.")
-        return redirect("musicas:song_list")
+        return redirect("musicas:song_repertorio")
 
     return render(request, "musicas/song_import.html")
 
@@ -188,12 +225,15 @@ def import_from_spotify(request):
             return redirect("musicas:import_from_spotify")
 
         categories = Category.objects.all()
+        TONS = ["C", "Cm", "C#", "C#m", "D", "Dm", "D#", "D#m", "E", "Em", "F", "Fm", "F#", "F#m", "G", "Gm", "G#", "G#m", "A", "Am", "A#", "A#m", "B", "Bm"]
         return render(request, "musicas/spotify_preview.html", {
             "songs": songs_data,
-            "categories": categories
+            "categories": categories,
+            "tones": TONS
         })
 
     return render(request, "musicas/import_spotify.html")
+
 
 def confirm_spotify_import(request):
     if request.method == "POST":
@@ -230,5 +270,121 @@ def confirm_spotify_import(request):
             created += 1
 
         messages.success(request, f"{created} música(s) importadas da playlist.")
-        return redirect("musicas:song_list")
+        return redirect("musicas:song_repertorio")
+    
+def import_top_country(request):
+    band = request.user.userprofile.band  # ou country_code = "br" se ainda não tiver userprofile
+    country_code = band.country
 
+    top_playlists = {
+        "br": "37i9dQZEVXbMXbN3EUUhlg",
+        "us": "37i9dQZEVXbLRQDuF5jeBp",
+        "pt": "37i9dQZEVXbKyJS56d1pgi",
+        # outros países...
+    }
+
+    playlist_id = top_playlists.get(country_code)
+    if not playlist_id:
+        messages.error(request, "Não há playlist configurada para este país.")
+        return redirect("musicas:song_repertorio")
+
+    try:
+        songs_data = fetch_spotify_playlist(f"https://open.spotify.com/playlist/{playlist_id}")
+    except Exception as e:
+        messages.error(request, f"Erro ao acessar Spotify: {e}")
+        return redirect("musicas:song_repertorio")
+
+    categories = Category.objects.all()
+    TONS = ["C", "Cm", "C#", "C#m", "D", "Dm", "D#", "D#m", "E", "Em", "F", "Fm", "F#", "F#m", "G", "Gm", "G#", "G#m", "A", "Am", "A#", "A#m", "B", "Bm"]
+
+    return render(request, "musicas/spotify_preview.html", {
+        "songs": songs_data,
+        "categories": categories,
+        "tones": TONS
+    })
+
+def roadmap(request):
+    progress_data = {
+        "musicas": {
+            "title": "🎵 Músicas",
+            "percent": 60,
+            "items": [
+                ("CRUD completo de músicas", True),
+                ("Campos: título, artista, tom, BPM, letra, links, categoria, temas, observações", True),
+                ("Importação via CSV/TXT/Excel", True),
+                ("Normalização/deduplicação automática", False),
+                ("Classificação com IA (categoria + temas)", False),
+                ("Integração com Spotify", True),
+                ("Integração com YouTube", False),
+                ("Integração com CifraClub", False),
+            ]
+        },
+        "setlists": {
+            "title": "📋 Setlists",
+            "percent": 15,
+            "items": [
+                ("Criar e salvar setlists com datas/horários", False),
+                ("Estrutura fixa por momento", False),
+                ("Definir tom de execução", False),
+                ("Associação de equipe escalada", False),
+                ("Upload de setlist externa", False),
+                ("Random inteligente com regras e botão “manter”", False),
+            ]
+        },
+        "equipe": {
+            "title": "👥 Equipes e Organizações",
+            "percent": 10,
+            "items": [
+                ("Cadastro de organizações com nome, cidade e país", False),
+                ("Cadastro de equipes vinculadas à organização", False),
+                ("Usuário pode criar ou entrar em várias equipes", False),
+                ("Solicitação de entrada em equipe com aprovação", False),
+                ("Gerenciamento de membros da equipe", False),
+                ("Filtragem de repertório por equipe", False),
+                ("Mensagem inteligente ao importar Top 100 sem equipe", False),
+            ]
+        },
+        "ia": {
+            "title": "🤖 Inteligência Artificial",
+            "percent": 0,
+            "items": [
+                ("Embeddings semânticos para sugestão por tema", False),
+                ("Classificação automática por BPM/letra", False),
+                ("Sugestão em tempo real de Pós-Mensagem", False),
+                ("Explicação da sugestão (“match 0.82 com tema Graça”)", False),
+            ]
+        },
+        "dashboard": {
+            "title": "🎛️ Dashboard & Relatórios",
+            "percent": 0,
+            "items": [
+                ("Ranking das músicas mais tocadas", False),
+                ("Estatísticas: BPM médio, tonalidades, temas", False),
+                ("Histórico de setlists", False),
+                ("Histórico da equipe", False),
+            ]
+        },
+        "culto": {
+            "title": "🕹️ Modo Culto (dinâmico)",
+            "percent": 0,
+            "items": [
+                ("Tela simplificada para uso ao vivo", False),
+                ("Busca por temas em tempo real", False),
+                ("Botão rápido “Sugerir Pós-Mensagem”", False),
+                ("Ações rápidas: “Tocar agora”, “Projetar link”", False),
+            ]
+        },
+        "infra": {
+            "title": "🌐 Infraestrutura",
+            "percent": 40,
+            "items": [
+                ("Banco de dados: Postgres (produção), SQLite (dev)", True),
+                ("Hospedagem gratuita: Railway / Render / PythonAnywhere", False),
+                ("Exportar setlists como playlist (Spotify/YouTube)", False),
+                ("Exportar calendário (ICS)", False),
+                ("Subdomínio gratuito para testes online", False),
+            ]
+        }
+    }
+
+    return render(request, "musicas/roadmap.html", {"progress_data": progress_data})

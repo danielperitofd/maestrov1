@@ -11,23 +11,35 @@
             <th>Link</th>
             <th>Categoria</th>
             <th>BPM</th>
-            <th>Tom</th>
+            <th>TOM</th>
+
         </tr>
         {% for song in songs %}
-        <tr>
-            <td><input type="hidden" name="title_{{ forloop.counter }}" value="{{ song.title }}">{{ song.title }}</td>
-            <td><input type="hidden" name="artist_{{ forloop.counter }}" value="{{ song.artist }}">{{ song.artist }}</td>
-            <td><input type="hidden" name="links_{{ forloop.counter }}" value="{{ song.links }}"><a href="{{ song.links }}" target="_blank">Ouvir</a></td>
-            <td>
-                <select name="category_{{ forloop.counter }}">
-                    {% for cat in categories %}
-                        <option value="{{ cat.name }}" {% if cat.name == song.category %}selected{% endif %}>{{ cat.name }}</option>
-                    {% endfor %}
-                </select>
-            </td>
-            <td><input type="number" name="bpm_{{ forloop.counter }}" value="{{ song.bpm }}" placeholder="BPM" style="width: 60px;"></td>
-            <td><input type="text" name="key_{{ forloop.counter }}" value="{{ song.key }}" placeholder="Tom" style="width: 60px;"></td>
-        </tr>
+            <tr id="row_{{ forloop.counter }}">
+                <td><input type="hidden" name="title_{{ forloop.counter }}" value="{{ song.title }}">{{ song.title }}</td>
+                <td><input type="hidden" name="artist_{{ forloop.counter }}" value="{{ song.artist }}">{{ song.artist }}</td>
+                <td><input type="hidden" name="links_{{ forloop.counter }}" value="{{ song.links }}"><a href="{{ song.links }}" target="_blank">Ouvir</a></td>
+                <td>
+                    <select name="category_{{ forloop.counter }}">
+                        {% for cat in categories %}
+                            <option value="{{ cat.name }}" {% if cat.name == song.category %}selected{% endif %}>{{ cat.name }}</option>
+                        {% endfor %}
+                    </select>
+                </td>
+                <td>
+                    <input type="number" name="bpm_{{ forloop.counter }}" value="{{ song.bpm }}" min="40" max="320" placeholder="BPM" style="width: 60px;">
+                </td>
+                <td>
+                    <select name="key_{{ forloop.counter }}">
+                        {% for tone in tones %}
+                            <option value="{{ tone }}" {% if tone == song.key %}selected{% endif %}>{{ tone }}</option>
+                        {% endfor %}
+                    </select>
+                </td>
+                <td>
+                    <button type="button" onclick="document.getElementById('row_{{ forloop.counter }}').remove()" class="btn" style="background-color: #f5efeeff; color: white;">🗑️</button>
+                </td>
+            </tr>
         {% endfor %}
     </table>
     <input type="hidden" name="total" value="{{ songs|length }}">

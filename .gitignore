@@ -1,2 +1,6 @@
 # Ignora o ambiente virtual
 .venv/
+__pycache__/
+*.pyc
+*.log
+.env

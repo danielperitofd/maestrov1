@@ -1,0 +1,59 @@
+{% extends "musicas/base.html" %}
+{% block content %}
+<h2>📊 Painel de Progresso do MaestroV1</h2>
+
+<style>
+    .module-box {
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        padding: 16px;
+        margin-bottom: 30px;
+        background-color: #f9f9f9;
+    }
+    .progress-container {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 10px;
+    }
+    .progress-bar {
+        flex: 1;
+        height: 20px;
+        background-color: #e0e0e0;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    .progress-fill {
+        height: 100%;
+        background-color: #4caf50;
+        width: 0%;
+        transition: width 0.5s ease;
+    }
+    .progress-label {
+        font-weight: bold;
+        color: #333;
+        min-width: 40px;
+    }
+    .status-icon {
+        font-size: 18px;
+        margin-right: 8px;
+    }
+</style>
+
+{% for key, module in progress_data.items %}
+<div class="module-box">
+    <div class="progress-container">
+        <div class="progress-bar">
+            <div class="progress-fill" style="width: {{ module.percent }}%;"></div>
+        </div>
+        <div class="progress-label">{{ module.percent }}%</div>
+    </div>
+    <h3>{{ module.title }}</h3>
+    <ul>
+        {% for item, done in module.items %}
+            <li><span class="status-icon">{% if done %}✅{% else %}🔄{% endif %}</span> {{ item }}</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endfor %}
+{% endblock %}
