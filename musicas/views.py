@@ -376,13 +376,19 @@ def roadmap(request):
         },
         "infra": {
             "title": "🌐 Infraestrutura",
-            "percent": 40,
+            "percent": 50,
             "items": [
                 ("Banco de dados: Postgres (produção), SQLite (dev)", True),
                 ("Hospedagem gratuita: Railway / Render / PythonAnywhere", False),
                 ("Exportar setlists como playlist (Spotify/YouTube)", False),
                 ("Exportar calendário (ICS)", False),
                 ("Subdomínio gratuito para testes online", False),
+                ("Integração com Google OAuth", True),
+                ("Estilização de telas de login/signup", True),
+                ("Exibição de foto de perfil com borda verde", True),
+                ("Botões com ícones visuais (editar/excluir)", True),
+                ("Cards de acesso rápido na tela de boas-vindas", True),
+                ("Cadastro manual com foto de perfil", False),
             ]
         }
     }

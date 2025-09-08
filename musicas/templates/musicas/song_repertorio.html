@@ -1,5 +1,4 @@
 {% extends "musicas/base.html" %}
-
 {% block content %}
 <h2>REPERTÓRIO</h2>
 <div style="margin-bottom: 20px;">
@@ -7,16 +6,15 @@
     <a href="{% url 'musicas:song_import' %}" class="btn">📂 Importar File CSV</a>
     <a href="{% url 'musicas:import_from_spotify' %}" class="btn">🎧 Import Playlist Spotify</a>
     <a href="{% url 'musicas:import_top_country' %}" class="btn">🌍Import Top 100 do País</a>
-
 </div>
 
 <table>
     <tr>
         <th>Título</th>
-        <th>Tom</th>
-        <th>BPM</th>
-        <th>Categoria</th>
         <th>Artista</th>
+        <th>Categoria</th>
+        <th>BPM</th>
+        <th>Tom</th>
         <th>Ações</th>
     </tr>
     {% for song in songs %}
@@ -32,7 +30,7 @@
         </td>
     </tr>
     {% empty %}
-    <tr><td colspan="5">Nenhuma música cadastrada.</td></tr>
+    <tr><td colspan="6">Nenhuma música cadastrada.</td></tr>
     {% endfor %}
 </table>
 {% endblock %}

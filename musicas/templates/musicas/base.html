@@ -4,110 +4,50 @@
 <head>
     <meta charset="UTF-8">
     <title>iMaestro</title>
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f0f4f8;
-            margin: 0;
-            padding: 0;
-        }
-        header {
-            background: #0c4a6e;
-            color: white;
-            padding: 20px;
-            text-align: center;
-            box-shadow: 0px 2px 6px rgba(10, 10, 10, 0.2);
-        }
-        .container {
-            width: 80%;
-            margin: 20px auto;
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0px 3px 8px rgba(0,0,0,0.1);
-        }
-        a {
-            text-decoration: none;
-            color: #0c4a6e;
-            font-weight: bold;
-        }
-        .btn {
-            display: inline-block;
-            padding: 8px 12px;
-            margin: 4px;
-            background: #0c4a6e;
-            color: white;
-            border-radius: 5px;
-        }
-        .btn:hover {
-            background: #075985;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 10px;
-            text-align: left;
-        }
-        th {
-            background: #e2e8f0;
-        }
-        .input, .textarea {
-            width: 100%;
-            padding: 8px;
-            margin-top: 5px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-        a i {
-        font-size: 18px;
-        margin: 0 8px;
-        color: #0c4a6e;
-        transition: color 0.2s ease;
-        }
-        a i:hover {
-            color: #e11d48;
-        }
-        .profile-pic {
-        width: 48px;
-        height: 48px;
-        border-radius: 50%;
-        object-fit: cover;
-        border: 2px solid #22c55e;
-        transition: transform 0.2s ease;
-        }
-        .profile-pic:hover {
-            transform: scale(1.05);
-        }
-    </style>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
-    <header>
-            
-        <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 20px;">
-            <a href="{% url 'musicas:welcome' %}">
-                <img src="{% static 'musicas/images/logo_maestro_white.png' %}" alt="Logo MaestroV1" style="cursor: pointer;">
-            </a>
-            {% comment %} <h1 style="margin: 0;">iMaestro</h1> {% endcomment %}
-        </div>
-        {% if user.is_authenticated %}
-            <p style="margin-top: 10px;">Logado como <strong>{{ user.first_name|default:user.username }}{% if user.is_authenticated %}<a href="{% url 'account_logout' %}" class="btn">🚪 Sair</a>{% endif %}</strong></p>
-        {% else %}
-            <a href="{% url 'account_login' %}" class="btn">Entrar com Google</a>
-        {% endif %}
+    <div class="layout">
+        <!-- Sidebar lateral -->
+        <aside class="sidebar">
+            <div style="text-align: center;">
+                <a href="{% url 'musicas:welcome' %}" class="top_logo">
+                    <img src="{% static 'musicas/images/logo_maestro_white.png' %}" alt="Logo iMaestro" class="logo">
+                </a>
+            </div>
 
-    </header>
+            <nav>
+                <ul>
+                    <li><a href="{% url 'musicas:welcome' %}" class="active">🏠 Home</a></li>
+                    <li><a href="{% url 'musicas:song_repertorio' %}"class="active">🎶 Repertório</a></li>
+                    <li><a href="{% url 'musicas:song_create' %}"class="active">➕ Adicionar Música</a></li>
+                    <li><a href="{% url 'musicas:import_from_spotify' %}"class="active">🎧 Importar do Spotify</a></li>
+                    <li><a href="{% url 'musicas:roadmap' %}"class="active">📋 Roadmap</a></li>
+                    <li><a href="{% url 'musicas:create_company_and_band' %}"class="active">🎤 Organização</a></li>
+                </ul>
+            </nav>
 
-    <div class="container">
-        {% block content %}{% endblock %}
+            <!-- Separador visual -->
+            <hr style="margin: 20px 0; border-color: #ffffff33;">
+
+            <div>
+                {% if user.is_authenticated %}
+                    <p>👤 {{ user.first_name|default:user.username }}</p>
+                    <hr style="margin: 20px 0; border-color: #ffffff33;">
+                    <a href="{% url 'account_logout' %}" class="btn">🚪 Sair</a>
+                {% else %}
+                    <a href="{% url 'account_login' %}" class="btn">Entrar com Google</a>
+                {% endif %}
+            </div>
+        </aside>
+
+        <hr style="margin: 20px 0; border-color: #ffffff33;">
+
+        <!-- Conteúdo principal -->
+        <main class="main-content">
+            {% block content %}{% endblock %}
+        </main>
     </div>
-    
-
-
 </body>
 </html>
