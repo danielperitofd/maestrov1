@@ -1,32 +1,47 @@
-from django.shortcuts import render, redirect, get_object_or_404
+import csv
+import spotipy
+from spotipy.oauth2 import SpotifyClientCredentials
 from .spotify_client import fetch_spotify_playlist, fetch_spotify_track, fetch_spotify_album
-from .models import Category
 
 from .models import Song
+from .models import Category
 from .forms import SongForm
-import csv
 from django.contrib import messages
-
 from .forms import CompanyForm, BandForm
 from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect, get_object_or_404
+
+sp = spotipy.Spotify(auth_manager=SpotifyClientCredentials(
+    client_id="10e22c8b31cd4aff8505ddf6abc48245",
+    client_secret="a2f61be369974ae2ae8b05cc3bdc840e"
+))
+
+def get_audio_features(track_id):
+    features = sp.audio_features([track_id])[0]
+    if features:
+        bpm = round(features['tempo']) if features['tempo'] else None
+        key_map = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
+        key = key_map[features['key']] if features['key'] is not None else None
+        if features['mode'] == 0 and key:
+            key += "m"
+        return bpm, key
+    return None, None
 
 @login_required
 def create_company_and_band(request):
     if request.method == "POST":
         company_form = CompanyForm(request.POST)
         band_form = BandForm(request.POST)
-
         if company_form.is_valid() and band_form.is_valid():
             company = company_form.save()
             band = band_form.save(commit=False)
             band.company = company
             band.save()
             band.members.add(request.user)
-            return redirect("musicas:welcome")  # ou outra página de boas-vindas
+            return redirect("musicas:welcome")
     else:
         company_form = CompanyForm()
         band_form = BandForm()
-
     return render(request, "musicas/create_company_and_band.html", {
         "company_form": company_form,
         "band_form": band_form
@@ -224,10 +239,36 @@ def import_from_spotify(request):
             messages.error(request, f"Erro ao acessar Spotify: {e}")
             return redirect("musicas:import_from_spotify")
 
+        # --- ENRIQUECIMENTO DOS DADOS ---
+        enriched_songs = []
+        for song in songs_data:
+            track_id = song.get("id")
+            bpm, key = (None, None)
+            if track_id:
+                bpm, key = get_audio_features(track_id)
+
+                # Log de debug no console
+                print(f"[DEBUG] Track: {song.get('title')} ({track_id}) -> BPM={bpm}, Key={key}")
+
+            enriched_songs.append({
+                "title": song.get("title"),
+                "artist": song.get("artist"),
+                "links": song.get("links") or song.get("audio_link") or "",
+                "category": song.get("category") or "",
+                "bpm": bpm if bpm else "Desconhecido",
+                "key": key if key else "Desconhecido",
+                "lyrics_link": "",
+                "chord_link": ""
+            })
+
         categories = Category.objects.all()
-        TONS = ["C", "Cm", "C#", "C#m", "D", "Dm", "D#", "D#m", "E", "Em", "F", "Fm", "F#", "F#m", "G", "Gm", "G#", "G#m", "A", "Am", "A#", "A#m", "B", "Bm"]
+        TONS = [
+            "C", "Cm", "C#", "C#m", "D", "Dm", "D#", "D#m",
+            "E", "Em", "F", "Fm", "F#", "F#m", "G", "Gm",
+            "G#", "G#m", "A", "Am", "A#", "A#m", "B", "Bm"
+        ]
         return render(request, "musicas/spotify_preview.html", {
-            "songs": songs_data,
+            "songs": enriched_songs,
             "categories": categories,
             "tones": TONS
         })
@@ -239,7 +280,6 @@ def confirm_spotify_import(request):
     if request.method == "POST":
         total = int(request.POST.get("total", 0))
         created = 0
-
         for i in range(1, total + 1):
             title = request.POST.get(f"title_{i}", "").strip()
             artist = request.POST.get(f"artist_{i}", "").strip()
@@ -247,30 +287,53 @@ def confirm_spotify_import(request):
             category = request.POST.get(f"category_{i}", "").strip()
             bpm_raw = request.POST.get(f"bpm_{i}", "").strip()
             key = request.POST.get(f"key_{i}", "").strip()
+            lyrics_link = request.POST.get(f"lyrics_link_{i}", "").strip()
+            chord_link = request.POST.get(f"chord_link_{i}", "").strip()
 
+            # --- Tratamento de BPM ---
             try:
                 bpm = int(bpm_raw) if bpm_raw else None
             except ValueError:
-                bpm = None
+                bpm = None  # sempre None se não for número
+
+            # --- Tratamento de Key ---
+            if not key:
+                key = None  # aqui pode ser TextField/CharField, aceita vazio
 
             if not title or not artist:
                 continue
+            
+            # --- Evitar duplicatas ---
+            exists = Song.objects.filter(
+                title__iexact=title,
+                artist__iexact=artist
+            ).exists()
 
+            if exists:
+                print(f"[DUPLICATA] {title} - {artist} já existe, ignorado.")
+                continue
+
+            # --- Criar música nova ---
             Song.objects.create(
                 title=title,
                 artist=artist,
-                key=key or None,
+                key=key,
                 bpm=bpm,
                 lyrics_excerpt="",
                 links=links,
                 category=category,
                 themes="",
-                notes=""
+                notes="",
+                audio_link=links,
+                lyrics_link=lyrics_link,
+                chord_link=chord_link
             )
             created += 1
 
         messages.success(request, f"{created} música(s) importadas da playlist.")
         return redirect("musicas:song_repertorio")
+
+
     
 def import_top_country(request):
     band = request.user.userprofile.band  # ou country_code = "br" se ainda não tiver userprofile
@@ -315,6 +378,9 @@ def roadmap(request):
                 ("Normalização/deduplicação automática", False),
                 ("Classificação com IA (categoria + temas)", False),
                 ("Integração com Spotify", True),
+                ("Importar (Nome, Artista) do Spotify", True),
+                ("Importar Tom e Bmp da música do Spotify", False),
+                ("Não repetir musicas já Importadas/Cadastradas", False),
                 ("Integração com YouTube", False),
                 ("Integração com CifraClub", False),
             ]
@@ -379,7 +445,7 @@ def roadmap(request):
             "percent": 50,
             "items": [
                 ("Banco de dados: Postgres (produção), SQLite (dev)", True),
-                ("Hospedagem gratuita: Railway / Render / PythonAnywhere", False),
+                ("Hospedagem gratuita: Railway / Render / PythonAnywhere / Netlify", False),
                 ("Exportar setlists como playlist (Spotify/YouTube)", False),
                 ("Exportar calendário (ICS)", False),
                 ("Subdomínio gratuito para testes online", False),

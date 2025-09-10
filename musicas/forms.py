@@ -4,7 +4,7 @@ from .models import Song, Company, Band
 class SongForm(forms.ModelForm):
     class Meta:
         model = Song
-        fields = ["title", "artist", "key", "bpm", "lyrics_excerpt", "links", "category", "themes", "notes"]
+        fields = ["title", "artist", "key", "bpm", "lyrics_excerpt", "links", "audio_link", "lyrics_link", "chord_link", "category", "themes", "notes"]
         widgets = {
             "title": forms.TextInput(attrs={"class": "input"}),
             "artist": forms.TextInput(attrs={"class": "input"}),

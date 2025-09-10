@@ -76,8 +76,7 @@
 <body>
     <div class="left">
         <img src="{% static 'musicas/images/logo_maestro_white.png' %}" alt="Logo MaestroV1">
-        <h1>Bem-vindo ao MaestroV1</h1>
-        <p>Inteligência e música em harmonia</p>
+        Inteligência e música em harmonia <h1>Bem-vindo</h1> 
     </div>
     <div class="right">
         <div class="form-box">
@@ -96,8 +95,8 @@
                     {{ form.remember }}
                     <label for="id_remember">Lembrar de mim</label>
                 </div>
-                <button type="submit" class="btn">Entrar</button>
-                <p><a href="{% provider_login_url 'google' %}" class="btn">Entrar com Google</a></p>
+                <p><button type="submit" class="btn">Entrar</button></p>
+                <p><button type="submit" class="btn"><a href="{% provider_login_url 'google' %}" class="btn">Entrar com Google</a></button></p>
             </form>
 
             <div class="extra">

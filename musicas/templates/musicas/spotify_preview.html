@@ -12,6 +12,9 @@
             <th>Categoria</th>
             <th>BPM</th>
             <th>TOM</th>
+            <th>Áudio</th>
+            <th>Letra</th>
+            <th>Cifra</th>
             <th>Ações</th>
         </tr>
         {% for song in songs %}
@@ -46,8 +49,18 @@
                 </select>
             </td>
             <td>
+                <input type="url" name="audio_link_{{ forloop.counter }}" value="{{ song.audio_link }}">
+            </td>
+            <td>
+                <input type="url" name="lyrics_link_{{ forloop.counter }}" value="{{ song.lyrics_link }}">
+            </td>
+            <td>
+                <input type="url" name="chord_link_{{ forloop.counter }}" value="{{ song.chord_link }}">
+            </td>
+            <td>
                 <button type="button" onclick="document.getElementById('row_{{ forloop.counter }}').remove()"><i class="fas fa-trash"></i></button>
             </td>
+
         </tr>
         {% endfor %}
     </table>

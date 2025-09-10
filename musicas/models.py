@@ -16,7 +16,11 @@ class Song(models.Model):
     category = models.CharField(max_length=20, choices=Category.choices, default=Category.NEUTRA)
     themes = models.CharField(max_length=200, blank=True, null=True)
     notes = models.TextField(blank=True, null=True)
-
+    # update (09/09/2025) ------------------------------------------------
+    audio_link = models.URLField(blank=True, null=True)  # Spotify/YouTube
+    lyrics_link = models.URLField(blank=True, null=True) # Link da letra
+    chord_link = models.URLField(blank=True, null=True)  # Link da cifra
+    # --------------------------------------------------------------------- 
     band = models.ForeignKey("Band", on_delete=models.CASCADE, related_name="songs", null=True)
 
     def __str__(self):
