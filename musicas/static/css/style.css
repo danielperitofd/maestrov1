@@ -117,7 +117,7 @@ a i:hover {
     height: 48px;
     border-radius: 50%;
     object-fit: cover;
-    border: 2px solid #22c55e;
+    border: 2px solid #c522aa;
     transition: transform 0.2s ease;
 }
 
@@ -232,8 +232,8 @@ a i:hover {
 }
 
 .sidebar .logo {
-    width: 220px;
-    margin-bottom: 20px;
+    width: 110px;
+    margin-bottom: 10px;
 }
 
 .sidebar ul {
@@ -289,11 +289,3 @@ a i:hover {
     }
 }
 
-.btn {
-    transition: background-color 0.3s ease, transform 0.2s ease;
-}
-
-.btn:hover {
-    background-color: #075985;
-    transform: scale(1.03);
-}

@@ -5,7 +5,7 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Entrar no iMaestro</title>
+    <title>Entrar no iMaestry</title>
     <style>
         body {
             margin: 0;
@@ -75,8 +75,8 @@
 </head>
 <body>
     <div class="left">
-        <img src="{% static 'musicas/images/logo_maestro_white.png' %}" alt="Logo MaestroV1">
-        Inteligência e música em harmonia <h1>Bem-vindo</h1> 
+        <img src="{% static 'musicas/images/logo_imaestry_white.png' %}" alt="Logo MaestroV1">
+        <h1>Bem-vindo</h1>Inteligência e música em harmonia  
     </div>
     <div class="right">
         <div class="form-box">
@@ -102,9 +102,10 @@
             <div class="extra">
                 <p><a href="{% url 'account_reset_password' %}">Esqueceu a senha?</a></p>
                 <p>Não tem conta? <a href="{% url 'account_signup' %}">Criar conta</a></p>
+                <p>Não tem conta? <a href="{% url 'musicas:register_choice' %}">Cadastre-se</a></p>
+
             </div>
         </div>
     </div>
-    {% comment %} <div style="margin-top: 20px;"> </div> {% endcomment %}
 </body>
 </html>

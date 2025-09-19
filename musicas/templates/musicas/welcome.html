@@ -1,14 +1,14 @@
 {% extends "musicas/base.html" %}
 {% block content %}
-<h2>Bem-vindo ao iMaestro, {{ name }}!</h2>
-<div style="display: flex; align-items: center; gap: 12px; margin-top: 10px;">
+<h2>Olá {{ name }}, seja bem-vindo ao iMaestry!</h2>
+{% comment %} <div style="display: flex; align-items: center; gap: 12px; margin-top: 10px;">
     {% if photo %}
         <img src="{{ photo }}" alt="Foto de perfil" class="profile-pic">
     {% else %}
         <p style="color: red;">Foto não disponível</p>
     {% endif %}
     <p style="margin: 0;">mail: {{ email }}</p>
-</div>
+</div> {% endcomment %}
 
 <p>Agora você pode criar sua organização, montar equipes e começar a cadastrar seu repertório musical!</p>
 

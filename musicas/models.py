@@ -70,6 +70,15 @@ class UserProfile(models.Model):
     def __str__(self):
         return self.user.username
 
+class Profile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    photo = models.ImageField(upload_to='profiles/', blank=True, null=True)
+    birth_date = models.DateField(null=True, blank=True)
+    # outros campos que quiser
+
+    def __str__(self):
+        return f"Perfil de {self.user.username}"
+    
 class Feature(models.Model):
     name = models.CharField(max_length=100)
     module = models.CharField(max_length=50)
@@ -78,3 +87,4 @@ class Feature(models.Model):
     responsavel = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     prazo = models.DateField(null=True, blank=True)
     atualizado_em = models.DateTimeField(auto_now=True)
+

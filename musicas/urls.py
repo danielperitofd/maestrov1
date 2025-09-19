@@ -18,5 +18,11 @@ urlpatterns = [
     path("criar-organizacao/", views.create_company_and_band, name="create_company_and_band"),
     path("accounts/", include("allauth.urls")),
     path("admin/", admin.site.urls),
-    
+    path("perfil_membro/", views.perfil_membro, name="perfil_membro"), 
+    path("config_system/", views.config_system, name="config_system"),
+    path("cadastro-escolha/", views.register_choice, name="register_choice"),
+    path("cadastro-manual/", views.register_manual, name="register_manual"),
+    path("cadastro-equipe/", views.register_team_or_join, name="register_team_or_join"),
+
+
 ]

@@ -6,9 +6,15 @@ from .spotify_client import fetch_spotify_playlist, fetch_spotify_track, fetch_s
 from .models import Song
 from .models import Category
 from .forms import SongForm
+from django.shortcuts import render
+from django.utils import timezone
+
+from .models import Band, Company
 from django.contrib import messages
 from .forms import CompanyForm, BandForm
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
+from django.contrib.auth import login
 from django.shortcuts import render, redirect, get_object_or_404
 
 sp = spotipy.Spotify(auth_manager=SpotifyClientCredentials(
@@ -368,66 +374,96 @@ def import_top_country(request):
 
 def roadmap(request):
     progress_data = {
+        "autenticacao": {
+            "title": "🔐 Autenticação e Equipes",
+            "percent": 40,
+            "items": [
+                ("Tela de login e cadastro de usuário", True),
+                ("Usuário pode criar equipe como ADM", True),
+                ("Gerar código de entrada para equipe", False),
+                ("Entrar em equipe via código ou convite", True),
+                ("Promoção de membro a ADM", False),
+                ("Melhorar layout da tela register_choice", False),
+                ("Melhorar layout da tela register_manual", False),
+            ]
+        },
+        "membros": {
+            "title": "👤 Cadastro de Membros",
+            "percent": 30,
+            "items": [
+                ("CRUD completo de membros com ícones visuais", False),
+                ("Campos pessoais: nome, nascimento, gênero, foto", True),
+                ("Lembrete automático de aniversários", False),
+                ("Contato: telefone, e-mail, cidade/estado", False),
+                ("Função na banda: instrumentos, vocal, categoria", False),
+                ("Quiz musical para validar categoria", False),
+                ("Equipamento pessoal: próprio ou da banda", False),
+                ("Tela perfil_membro.html para complementar cadastro", False),
+                ("Mudar foto de avatar caso não tenha logado com Google", False),
+            ]
+        },
+        "realidade": {
+            "title": "📅 Realidade da Equipe",
+            "percent": 0,
+            "items": [
+                ("Configuração de eventos e ensaios por dia/horário", False),
+                ("Frequência: semanal, quinzenal, mensal", False),
+                ("Datas comemorativas (Natal, Páscoa etc.)", False),
+            ]
+        },
+        "convocacao": {
+            "title": "📣 Disponibilidade e Convocação",
+            "percent": 0,
+            "items": [
+                ("Calendário de disponibilidade por membro", False),
+                ("Convocação manual ou automática por evento", False),
+                ("Equipe automática com travas por membro", False),
+                ("Notificação via WhatsApp para confirmação", False),
+                ("Substituição em caso de ausência", False),
+            ]
+        },
+        "setlists": {
+            "title": "📋 Montagem de SetList",
+            "percent": 15,
+            "items": [
+                ("Criar e salvar setlists com datas/horários", False),
+                ("Estrutura fixa por momento (Exaltação + Adoração)", False),
+                ("Modelo alternativo com quantidade definida", False),
+                ("Definir tom de execução", False),
+                ("Associação de equipe escalada", False),
+                ("Upload de setlist externa", False),
+                ("Random inteligente com regras e botão “manter”", False),
+                ("Busca por tema bíblico para Pós-Mensagem", False),
+                ("Poslúdio definido manualmente", False),
+            ]
+        },
         "musicas": {
-            "title": "🎵 Músicas",
+            "title": "🎵 Biblioteca de Músicas e IA",
             "percent": 60,
             "items": [
                 ("CRUD completo de músicas", True),
                 ("Campos: título, artista, tom, BPM, letra, links, categoria, temas, observações", True),
                 ("Importação via CSV/TXT/Excel", True),
-                ("Normalização/deduplicação automática", False),
                 ("Classificação com IA (categoria + temas)", False),
                 ("Integração com Spotify", True),
                 ("Importar (Nome, Artista) do Spotify", True),
-                ("Importar Tom e Bmp da música do Spotify", False),
-                ("Não repetir musicas já Importadas/Cadastradas", False),
+                ("Importar Tom e BPM da música do Spotify", False),
+                ("Não repetir músicas já importadas/cadastradas", True),
                 ("Integração com YouTube", False),
                 ("Integração com CifraClub", False),
             ]
         },
-        "setlists": {
-            "title": "📋 Setlists",
-            "percent": 15,
-            "items": [
-                ("Criar e salvar setlists com datas/horários", False),
-                ("Estrutura fixa por momento", False),
-                ("Definir tom de execução", False),
-                ("Associação de equipe escalada", False),
-                ("Upload de setlist externa", False),
-                ("Random inteligente com regras e botão “manter”", False),
-            ]
-        },
-        "equipe": {
-            "title": "👥 Equipes e Organizações",
-            "percent": 10,
-            "items": [
-                ("Cadastro de organizações com nome, cidade e país", False),
-                ("Cadastro de equipes vinculadas à organização", False),
-                ("Usuário pode criar ou entrar em várias equipes", False),
-                ("Solicitação de entrada em equipe com aprovação", False),
-                ("Gerenciamento de membros da equipe", False),
-                ("Filtragem de repertório por equipe", False),
-                ("Mensagem inteligente ao importar Top 100 sem equipe", False),
-            ]
-        },
-        "ia": {
-            "title": "🤖 Inteligência Artificial",
-            "percent": 0,
-            "items": [
-                ("Embeddings semânticos para sugestão por tema", False),
-                ("Classificação automática por BPM/letra", False),
-                ("Sugestão em tempo real de Pós-Mensagem", False),
-                ("Explicação da sugestão (“match 0.82 com tema Graça”)", False),
-            ]
-        },
         "dashboard": {
-            "title": "🎛️ Dashboard & Relatórios",
+            "title": "📊 Dashboard & Relatórios",
             "percent": 0,
             "items": [
                 ("Ranking das músicas mais tocadas", False),
                 ("Estatísticas: BPM médio, tonalidades, temas", False),
                 ("Histórico de setlists", False),
                 ("Histórico da equipe", False),
+                ("Frequência por integrante (% de presença)", False),
+                ("Eventos perdidos e atrasos", False),
+                ("Exportação para planilha ou gráfico", False),
             ]
         },
         "culto": {
@@ -442,7 +478,7 @@ def roadmap(request):
         },
         "infra": {
             "title": "🌐 Infraestrutura",
-            "percent": 50,
+            "percent": 60,
             "items": [
                 ("Banco de dados: Postgres (produção), SQLite (dev)", True),
                 ("Hospedagem gratuita: Railway / Render / PythonAnywhere / Netlify", False),
@@ -454,9 +490,73 @@ def roadmap(request):
                 ("Exibição de foto de perfil com borda verde", True),
                 ("Botões com ícones visuais (editar/excluir)", True),
                 ("Cards de acesso rápido na tela de boas-vindas", True),
-                ("Cadastro manual com foto de perfil", False),
+                ("Cadastro manual com foto de perfil", True),
             ]
         }
     }
 
     return render(request, "musicas/roadmap.html", {"progress_data": progress_data})
+
+
+def perfil_membro(request):
+    return render(request, "musicas/perfil_membro.html")
+
+def config_system(request):
+    return render(request, "musicas/config_system.html")
+
+def register_manual(request):
+    if request.method == "POST":
+        full_name = request.POST.get("full_name")
+        email = request.POST.get("email")
+        birth_date = request.POST.get("birth_date")
+        password1 = request.POST.get("password1")
+        password2 = request.POST.get("password2")
+
+        if len(full_name) < 15:
+            messages.error(request, "Digite nome e sobrenome com pelo menos 15 caracteres.")
+            return redirect("musicas:register_manual")
+
+        if password1 != password2:
+            messages.error(request, "Senhas não coincidem.")
+            return redirect("musicas:register_manual")
+
+        if User.objects.filter(username=email).exists():
+            messages.error(request, "Este e-mail já está cadastrado. Tente fazer login.")
+            return redirect("musicas:register_manual")
+
+        user = User.objects.create_user(username=email, email=email, password=password1)
+        user.first_name = full_name
+        user.save()
+        user.backend = 'django.contrib.auth.backends.ModelBackend'
+        login(request, user)
+
+        return redirect("musicas:register_team_or_join")
+
+    # Aqui fora do if
+    return render(request, "musicas/register_manual.html", {"today": timezone.now().date()})
+
+
+@login_required
+def register_team_or_join(request):
+    if request.method == "POST":
+        action = request.POST.get("action")
+        if action == "join":
+            code = request.POST.get("team_code")
+            band = Band.objects.filter(name=code).first()
+            if band:
+                band.members.add(request.user)
+                return redirect("musicas:welcome")
+            else:
+                messages.error(request, "Código inválido.")
+        elif action == "create":
+            name = request.POST.get("team_name")
+            company = Company.objects.first()
+            band = Band.objects.create(name=name, company=company)
+            band.members.add(request.user)
+            return redirect("musicas:welcome")
+
+    return render(request, "musicas/register_team_or_join.html")
+
+
+def register_choice(request):
+    return render(request, "musicas/register_choice.html")
